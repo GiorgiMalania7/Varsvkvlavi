@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ერთი რამ მინდა გაჩვენო</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Georgian:wght@200;300;400;500&family=Noto+Sans+Georgian:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#0c0913;
+    --violet:#1d1329;
+    --text:#f7f1e7;
+    --muted:#a89a94;
+    --gold:#e3b779;
+    --gold-bright:#f6d9a4;
+    --line:rgba(247,241,231,.12);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--night);
+    color:var(--text);
+    font-family:"Noto Serif Georgian",Georgia,serif;
+    font-weight:300;
+    font-size:19px;
+    line-height:1.8;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  /* ---------- sky ---------- */
+  #sky{position:fixed;inset:0;z-index:0;pointer-events:none;}
+  #sky canvas{width:100%;height:100%;display:block;will-change:transform;}
+  .veil{
+    position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:
+      radial-gradient(70% 55% at 50% 0%, rgba(227,183,121,.14) 0%, transparent 60%),
+      radial-gradient(60% 50% at 88% 100%, rgba(150,96,160,.18) 0%, transparent 65%),
+      radial-gradient(90% 70% at 50% 50%, transparent 30%, rgba(12,9,19,.75) 100%);
+  }
+  .grain{
+    position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.05;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+  }
+  .content{position:relative;z-index:3;}
+
+  /* ---------- gate ---------- */
+  .gate{
+    min-height:100svh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:10vh 24px;
+    position:relative;
+    transition:opacity 1s ease, transform 1s ease;
+  }
+  .gate.opened{opacity:0;transform:translateY(-30px);pointer-events:none;}
+  .eyebrow{
+    font-family:"Noto Sans Georgian",sans-serif;
+    font-size:11px;
+    letter-spacing:.46em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin:0 0 30px;
+    opacity:.95;
+  }
+  .gate h1{
+    font-weight:200;
+    font-size:clamp(2rem,6.4vw,4rem);
+    line-height:1.3;
+    margin:0;
+    letter-spacing:-.02em;
+    text-wrap:balance;
+    max-width:20ch;
+  }
+  .gate h1 em{
+    font-style:normal;
+    background:linear-gradient(100deg,var(--gold-bright),var(--gold) 60%,#c98f5c);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .open{
+    margin-top:clamp(46px,8vh,72px);
+    font-family:"Noto Sans Georgian",sans-serif;
+    font-size:12px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    color:var(--text);
+    background:transparent;
+    border:1px solid rgba(227,183,121,.5);
+    border-radius:999px;
+    padding:18px 44px;
+    cursor:pointer;
+    position:relative;
+    overflow:hidden;
+    transition:color .4s ease, border-color .4s ease;
+  }
+  .open::before{
+    content:"";
+    position:absolute;inset:0;
+    background:linear-gradient(100deg,rgba(227,183,121,.9),rgba(246,217,164,.9));
+    transform:translateY(101%);
+    transition:transform .45s cubic-bezier(.6,.1,.1,1);
+    z-index:-1;
+  }
+  .open:hover{color:#171020;border-color:transparent;}
+  .open:hover::before{transform:translateY(0);}
+  .open span{position:relative;z-index:1;}
+  .scroll-hint{
+    position:absolute;
+    bottom:34px;left:50%;transform:translateX(-50%);
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+    font-family:"Noto Sans Georgian",sans-serif;
+    font-size:10px;letter-spacing:.3em;text-transform:uppercase;
+    color:var(--muted);opacity:.7;
+  }
+  .scroll-hint i{display:block;width:1px;height:44px;background:linear-gradient(var(--gold),transparent);}
+
+  /* ---------- scenes ---------- */
+  .scene{
+    min-height:100svh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:12vh 24px;
+    position:relative;
+  }
+  .inner{width:100%;max-width:960px;}
+
+  /* numerals */
+  .years{display:flex;align-items:flex-end;justify-content:center;gap:clamp(24px,7vw,80px);flex-wrap:wrap;text-align:center;}
+  .figure{margin:0;}
+  .figure .n{
+    display:block;
+    font-size:clamp(6rem,27vw,15rem);
+    font-weight:200;
+    line-height:.82;
+    letter-spacing:-.05em;
+    background:linear-gradient(180deg,#fff8ee 0%,var(--gold-bright) 45%,#c08d57 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    filter:drop-shadow(0 0 44px rgba(227,183,121,.22));
+  }
+  .figure .l{
+    display:block;
+    margin-top:18px;
+    font-family:"Noto Sans Georgian",sans-serif;
+    font-size:12px;
+    letter-spacing:.4em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+  .years-caption{
+    margin:clamp(38px,6vh,64px) auto 0;
+    max-width:44ch;
+    text-align:center;
+    font-size:clamp(1.02rem,2.6vw,1.2rem);
+    color:#d9cfc4;
+  }
+
+  /* letter */
+  .letter-block{
+    max-width:620px;
+    margin:clamp(40px,6vh,64px) auto 0;
+    text-align:left;
+  }
+  .letter-block p{
+    font-size:clamp(1.02rem,2.6vw,1.14rem);
+    color:#ded4c8;
+    margin:0 0 1.25em;
+  }
+  .letter-block p.first::first-letter{
+    font-size:3em;
+    line-height:1;
+    float:left;
+    margin:.06em .16em 0 0;
+    color:var(--gold);
+  }
+  .letter-block p.beat{
+    color:#fbf5ec;
+    font-size:clamp(1.16rem,3.2vw,1.42rem);
+    font-weight:400;
+    line-height:1.55;
+    margin:1.7em 0;
+    padding-left:20px;
+    border-left:1px solid rgba(227,183,121,.55);
+  }
+  .letter-block p.sig-line{
+    margin:2.1em 0 0;
+    font-family:"Noto Sans Georgian",sans-serif;
+    font-size:12px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--muted);
+    text-align:right;
+  }
+
+  /* constellation */
+  .constel{min-height:118svh;}
+  .constel .inner{text-align:center;}
+  .constel h2{
+    font-weight:200;
+    font-size:clamp(1.55rem,4.6vw,2.6rem);
+    line-height:1.45;
+    margin:0 auto;
+    max-width:22ch;
+    text-wrap:balance;
+  }
+  .constel-svg{width:100%;max-width:700px;margin:clamp(30px,5vh,56px) auto 0;display:block;overflow:visible;}
+  .constel-svg line{
+    stroke:var(--gold);
+    stroke-width:.9;
+    stroke-dasharray:600;
+    stroke-dashoffset:600;
+    transition:stroke-dashoffset 2.6s ease;
+    opacity:.55;
+  }
+  .in .constel-svg line{stroke-dashoffset:0;}
+  .constel-svg circle{
+    fill:#fff8ee;
+    opacity:0;
+    transition:opacity 1.2s ease;
+    filter:drop-shadow(0 0 8px rgba(246,217,164,.9));
+  }
+  .in .constel-svg circle{opacity:1;}
+  .constel p{
+    margin:clamp(34px,5vh,54px) auto 0;
+    max-width:48ch;
+    font-size:clamp(1rem,2.5vw,1.13rem);
+    color:#d9cfc4;
+  }
+
+  /* final */
+  .final{min-height:100svh;text-align:center;}
+  .final .label{
+    font-family:"Noto Sans Georgian",sans-serif;
+    font-size:11px;letter-spacing:.44em;text-transform:uppercase;
+    color:var(--gold);margin:0 0 34px;
+  }
+  .final blockquote{
+    margin:0 auto;
+    max-width:24ch;
+    font-weight:200;
+    font-size:clamp(1.85rem,6vw,3.4rem);
+    line-height:1.38;
+    letter-spacing:-.018em;
+    text-wrap:balance;
+    background:linear-gradient(180deg,#fffaf2,#e9d6bb);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .final .after{
+    margin:clamp(40px,6vh,64px) auto 0;
+    max-width:40ch;
+    color:var(--muted);
+    font-size:clamp(.98rem,2.4vw,1.06rem);
+  }
+  .final .sig{
+    margin-top:clamp(48px,7vh,80px);
+    font-family:"Noto Sans Georgian",sans-serif;
+    font-size:11px;letter-spacing:.34em;text-transform:uppercase;
+    color:var(--muted);opacity:.75;
+  }
+
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity 1.3s ease, transform 1.3s ease;}
+  .in .reveal, .reveal.in{opacity:1;transform:none;}
+  .reveal.d1{transition-delay:.15s;}
+  .reveal.d2{transition-delay:.3s;}
+
+  footer{
+    position:relative;z-index:3;
+    border-top:1px solid var(--line);
+    padding:28px;
+    text-align:center;
+    font-family:"Noto Sans Georgian",sans-serif;
+    font-size:10px;letter-spacing:.3em;text-transform:uppercase;
+    color:var(--muted);opacity:.55;
+  }
+  @media (prefers-reduced-motion:reduce){
+    .reveal,.constel-svg line,.constel-svg circle{transition:none!important;}
+    html{scroll-behavior:auto;}
+  }
+</style>
+</head>
+<body>
+
+<div id="sky"><canvas id="stars"></canvas></div>
+<div class="veil"></div>
+<div class="grain"></div>
+
+<div class="content">
+
+  <header class="gate" id="gate">
+    <p class="eyebrow reveal">შენთვის</p>
+    <h1 class="reveal d1">ერთი რამ მინდა <em>გაჩვენო</em></h1>
+    <button class="open reveal d2" id="openBtn" type="button"><span>გახსენი</span></button>
+    <div class="scroll-hint"><span>ქვემოთ</span><i></i></div>
+  </header>
+
+  <main>
+
+    <section class="scene" data-reveal>
+      <div class="inner">
+        <div class="years">
+          <p class="figure reveal"><span class="n">4</span><span class="l">წელი</span></p>
+          <p class="figure reveal d1"><span class="n">6</span><span class="l">თვე</span></p>
+        </div>
+        <p class="years-caption reveal d2">ოთხი წელი და ექვსი თვე. ამდენ ხანს ერთი ადამიანი იყო შენი ყოველდღიურობის ნაწილი. ამას არ ვუარყოფ — და სწორედ ამიტომ ვწერ ამას ბოლოჯერ.</p>
+      </div>
+    </section>
+
+    <section class="scene constel" data-reveal>
+      <div class="inner">
+        <h2 class="reveal">არაფერი იკარგება სამუდამოდ — ზოგი რამ უბრალოდ სხვა ადგილას ბრწყინავს</h2>
+        <svg class="constel-svg" viewBox="0 0 640 320" aria-hidden="true" id="constelSvg"></svg>
+        <p class="reveal d2">მანძილი იცვლება, ნახატი კი იგივე რჩება. ასეა ჩვენც: ერთად ყოფნა დასრულდა, მაგრამ ის, რაც ნამდვილად იყო, არსად გამქრალა.</p>
+      </div>
+    </section>
+
+    <section class="scene final" data-reveal>
+      <div class="inner">
+        <p class="label reveal">ბოლო წერილი</p>
+        <blockquote class="reveal d1">ეს ბოლო წერილია, რომელსაც ჩემგან მიიღებ.</blockquote>
+
+        <div class="letter-block reveal d2">
+          <p class="first">სამი თვეა ველოდები, რომ შენ თვითონ გაარკვევ, რა გინდა. ამ დროის განმავლობაში ბევრი რამ გავარკვიე მე.</p>
+          <p>ხშირად პასუხს არ ვიღებდი. ხან საუბარი ბრაზით მთავრდებოდა, ხან — სიჩუმით. მე ამას ვიტანდი და მეგონა, დრო დაგვეხმარებოდა. არ დაგვეხმარა.</p>
+          <p>შენ არასოდეს არ თქვი პირდაპირ, რა გინდოდა. მე ვიღებდი ნახევარ პასუხებს და მათზე ვაშენებდი იმედს. ამაზე პასუხისმგებლობას ვიღებ ჩემს თავზე — მაგრამ იცოდე, რომ ერთი მკაფიო „არა“ ორივეს ბევრ თვეს დაგვიზოგავდა.</p>
+          <p>ახლა პირდაპირ გეტყვი: შენ გინდოდა, რომ მე ყოველთვის ხელმისაწვდომი ვყოფილიყავი — მაშინაც კი, როცა შენ არ ირჩევდი. ეს არ არის სიყვარული. ეს არის ჩვევა.</p>
+          <p class="beat">მე აღარ ვარ ხელმისაწვდომი.</p>
+          <p>აღარ მოგწერ, აღარ დაგირეკავ და აღარაფერს გკითხავ. ეს არ არის თამაში და არ არის წყენა. ეს არის გადაწყვეტილება.</p>
+          <p>თუ ოდესმე მოგინდა ლაპარაკი, მოდი გადაწყვეტილებით და არა ეჭვით. სხვანაირად ლაპარაკი აღარ მჭირდება.</p>
+          <p>გისურვებ, რომ ბედნიერი იყო. ნამდვილად.</p>
+          <p class="sig-line">— მე</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>ერთი პატარა ცა · არაფერს ვითხოვ</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- starfield ---------- */
+  var canvas = document.getElementById("stars");
+  var ctx = canvas.getContext("2d");
+  var stars = [];
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var w = 0, h = 0;
+
+  function buildStars(){
+    w = canvas.clientWidth;
+    h = canvas.clientHeight;
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    var count = Math.min(260, Math.round((w * h) / 9000));
+    stars = [];
+    for(var i = 0; i < count; i++){
+      stars.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: Math.random() * 1.5 + 0.25,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.4 + Math.random() * 1.1,
+        depth: 0.25 + Math.random() * 0.9,
+        gold: Math.random() > 0.78
+      });
+    }
+  }
+
+  var shooting = null;
+  function maybeShoot(t){
+    if(!shooting && Math.random() < 0.004){
+      shooting = {
+        x: Math.random() * w * 0.7,
+        y: Math.random() * h * 0.45,
+        vx: 4 + Math.random() * 3,
+        vy: 2 + Math.random() * 1.6,
+        life: 1
+      };
+    }
+  }
+
+  var scrollY = window.scrollY || 0;
+  var last = performance.now();
+
+  function frame(now){
+    var t = now / 1000;
+    ctx.clearRect(0, 0, w, h);
+
+    for(var i = 0; i < stars.length; i++){
+      var s = stars[i];
+      var a = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
+      var y = s.y - scrollY * 0.06 * s.depth;
+      y = ((y % h) + h) % h;
+      ctx.beginPath();
+      ctx.arc(s.x, y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = s.gold
+        ? "rgba(246,217,164," + a + ")"
+        : "rgba(255,250,242," + (a * 0.9) + ")";
+      ctx.fill();
+    }
+
+    maybeShoot(t);
+    if(shooting){
+      shooting.x += shooting.vx;
+      shooting.y += shooting.vy;
+      shooting.life -= 0.012;
+      var grad = ctx.createLinearGradient(shooting.x, shooting.y, shooting.x - shooting.vx * 22, shooting.y - shooting.vy * 22);
+      grad.addColorStop(0, "rgba(255,248,238," + Math.max(shooting.life, 0) + ")");
+      grad.addColorStop(1, "rgba(255,248,238,0)");
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(shooting.x, shooting.y);
+      ctx.lineTo(shooting.x - shooting.vx * 22, shooting.y - shooting.vy * 22);
+      ctx.stroke();
+      if(shooting.life <= 0 || shooting.x > w + 60 || shooting.y > h + 60) shooting = null;
+    }
+
+    last = now;
+    requestAnimationFrame(frame);
+  }
+
+  buildStars();
+  requestAnimationFrame(frame);
+
+  window.addEventListener("resize", buildStars);
+  window.addEventListener("scroll", function(){
+    scrollY = window.scrollY || 0;
+  }, {passive:true});
+
+  /* ---------- constellation ---------- */
+  var pts = [
+    [96, 236], [152, 150], [228, 196], [268, 96], [352, 148],
+    [404, 78], [452, 176], [536, 128], [560, 232], [472, 260], [340, 268]
+  ];
+  var svg = document.getElementById("constelSvg");
+  var ns = "http://www.w3.org/2000/svg";
+  var order = [0,1,2,3,4,5,6,7,8,9,10];
+
+  for(var k = 0; k < order.length - 1; k++){
+    var a = pts[order[k]], b = pts[order[k+1]];
+    var line = document.createElementNS(ns, "line");
+    line.setAttribute("x1", a[0]); line.setAttribute("y1", a[1]);
+    line.setAttribute("x2", b[0]); line.setAttribute("y2", b[1]);
+    line.style.transitionDelay = (k * 0.18) + "s";
+    svg.appendChild(line);
+  }
+  pts.forEach(function(p, idx){
+    var c = document.createElementNS(ns, "circle");
+    c.setAttribute("cx", p[0]);
+    c.setAttribute("cy", p[1]);
+    c.setAttribute("r", idx === 3 || idx === 6 ? 3.6 : 2.4);
+    c.style.transitionDelay = (idx * 0.16) + "s";
+    svg.appendChild(c);
+  });
+
+  /* ---------- reveal ---------- */
+  var targets = document.querySelectorAll("[data-reveal]");
+  if(!("IntersectionObserver" in window)){
+    targets.forEach(function(el){ el.classList.add("in"); });
+    document.querySelectorAll(".reveal").forEach(function(el){ el.classList.add("in"); });
+  } else {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          e.target.classList.add("in");
+          io.unobserve(e.target);
+        }
+      });
+    }, {threshold: 0.2, rootMargin: "0px 0px -10% 0px"});
+    targets.forEach(function(el){ io.observe(el); });
+
+    var io2 = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          e.target.classList.add("in");
+          io2.unobserve(e.target);
+        }
+      });
+    }, {threshold: 0.25});
+    document.querySelectorAll(".reveal").forEach(function(el){ io2.observe(el); });
+  }
+
+  /* ---------- gate ---------- */
+  var gate = document.getElementById("gate");
+  var btn = document.getElementById("openBtn");
+  btn.addEventListener("click", function(){
+    gate.classList.add("opened");
+    var next = document.querySelector("main .scene");
+    if(next) next.scrollIntoView({behavior:"smooth", block:"start"});
+  });
+})();
+</script>
+</body>
+</html>
